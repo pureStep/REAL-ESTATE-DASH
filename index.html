@@ -532,7 +532,7 @@ function illusFor(l) {
   const k = t === "villa" ? "villa" : t === "independent_house" ? "house" : (t === "plot" || t === "land") ? "plot" : ["shop", "office", "commercial"].includes(t) ? "commercial" : "apartment";
   return svgUri(ILL[k]);
 }
-function heroBg() { return S.settings.hero_photo ? photoUrl(S.settings.hero_photo) : svgUri(ILL.interior); }
+function heroBg() { return S.settings.hero_photo ? photoUrl(S.settings.hero_photo) : "images/header.png"; }
 function perSqft(l) { return l.asking_price && l.size_sqft && l.deal_type === "sale" ? "₹" + Math.round(l.asking_price / l.size_sqft).toLocaleString("en-IN") + "/sq ft" : ""; }
 function amenityList(l) { return (l.amenities || []).map(a => AMENITIES[a] || a); }
 function approvalList(l) { return (l.approvals || []).map(a => APPROVALS[a] || a); }
@@ -835,7 +835,7 @@ function wireCards(team) { document.querySelectorAll(".item").forEach(it => it.o
 function renderInventory(app) {
   const L = S.listings;
   const cnt = s => L.filter(l => l.status === s).length;
-  app.innerHTML = `<div class="stats sm"><div class="stat"><b>${L.length}</b><span>Total</span></div><div class="stat"><b>${cnt("available")}</b><span>Available</span></div><div class="stat"><b>${cnt("negotiating")}</b><span>Negotiating</span></div><div class="stat"><b>${cnt("sold") + cnt("rented")}</b><span>Closed</span></div></div>
+  app.innerHTML = `<div class="hero" style="min-height:84px;margin-bottom:8px;background-image:url('${esc(heroBg())}')"><div class="in" style="padding:10px 14px"><b style="font-size:16px">${esc(S.settings.business_name || "Mangalore Property Inventory")}</b><span>Your listings at a glance</span></div></div><div class="stats sm"><div class="stat"><b>${L.length}</b><span>Total</span></div><div class="stat"><b>${cnt("available")}</b><span>Available</span></div><div class="stat"><b>${cnt("negotiating")}</b><span>Negotiating</span></div><div class="stat"><b>${cnt("sold") + cnt("rented")}</b><span>Closed</span></div></div>
    ${searchBar("Search: 2 bhk under 55 lakh in Shivbagh")}${chips(true)}<div class="legend"><span><i class="dot available"></i>Available</span><span><i class="dot negotiating"></i>Negotiating</span><span><i class="dot sold"></i>Sold/Rented</span><span><i class="dot on_hold"></i>On hold</span></div><div id="qd"></div><div class="rows" id="res"></div>`;
   const rerun = () => {
     const res = applySearch(L, searchQ, S.query, true);
@@ -915,7 +915,7 @@ async function renderSettings(app) {
     ${owner ? `<div class="card"><h3>Business details</h3><form id="bf" class="grid">
       <div class="full">${field("business_name", "Business name (shown at the top)", S.settings.business_name)}</div>
       <div class="full">${field("whatsapp", "WhatsApp number for client enquiries", S.settings.whatsapp, "tel")}</div>
-      <div class="full"><label>Client page cover photo</label><div class="hero" style="min-height:120px;background-image:url('${esc(heroBg())}')"><div class="in"><span>${S.settings.hero_photo ? "Your photo" : "Default illustration"}</span></div></div>
+      <div class="full"><label>Client page cover photo</label><div class="hero" style="min-height:120px;background-image:url('${esc(heroBg())}')"><div class="in"><span>${S.settings.hero_photo ? "Your photo" : "Default image"}</span></div></div>
         <div class="row"><input type="file" id="hero" accept="image/*" class="grow">${S.settings.hero_photo ? `<button type="button" class="btn sec sm" id="herox">Remove</button>` : ""}</div></div>
       <div class="full"><button class="btn">Save</button></div></form></div>
      <div class="card"><h3>Team</h3><p class="meta">Invite brokers by email. They sign up with that email on this page and get full access to the inventory.</p>
