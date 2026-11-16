@@ -74,7 +74,7 @@ a.btn{text-decoration:none;display:inline-block;text-align:center}
 .amen{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.amen span{font-size:12px;background:#f5f5f4;border-radius:999px;padding:3px 9px}
 .pricehint{font-size:12px;color:var(--g);margin-top:3px;min-height:16px}
 .rows{display:grid;grid-template-columns:1fr;gap:6px}@media(min-width:700px){.rows{grid-template-columns:1fr 1fr}}
-.rowi{flex-direction:row;align-items:center;gap:10px;padding:6px 10px 6px 6px;border-radius:12px}
+.rowi{flex-direction:row;align-items:center;gap:10px;padding:8px 12px;border-radius:12px}
 .rowi .th{width:56px;height:56px;border-radius:9px;object-fit:cover;flex:none;background:#e7e5e4}
 .rowi .rb{flex:1;min-width:0}.rowi .r1{display:flex;align-items:center;gap:6px}
 .rowi .rp{font-weight:700;font-size:15px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rowi .rp small{font-weight:500;color:var(--mut);font-size:12px}
@@ -625,10 +625,10 @@ function describeQuery(q) {
 // Compact one-line row for the team inventory, so many listings fit on one screen.
 function row(l, badge) {
   const real = l.photos?.length;
-  const src = real ? photoUrl(l.photos[0]) : illusFor(l);
+  const thumb = real ? `<img class="th" src="${esc(photoUrl(l.photos[0]))}" alt="" loading="lazy">` : "";
   const close = l.closing_price && l.closing_price !== l.asking_price ? ` <small>→ ${money(l.closing_price, l.deal_type)}</small>` : "";
   const bits = [l.bhk ? l.bhk + " BHK" : "", shortType(l), l.locality, l.size_sqft ? Math.round(l.size_sqft) + " sqft" : ""].filter(Boolean).join(" · ");
-  return `<div class="item rowi" data-id="${l.id}"><img class="th" src="${esc(src)}" alt="" loading="lazy">
+  return `<div class="item rowi" data-id="${l.id}">${thumb}
     <div class="rb"><div class="r1"><span class="rp">${money(l.asking_price, l.deal_type)}${close}</span><span class="dot ${l.status}" title="${STATUSES[l.status] || l.status}"></span></div>
     <div class="r2">${esc(bits)}</div>
     <div class="r3">${l.building ? esc(l.building) + " · " : ""}#${esc(l.ref_code)}${badge ? ` · <b class="mt">${badge}</b>` : ""}${l.deal_type === "rent" ? " · Rent" : ""}</div></div></div>`;
@@ -637,11 +637,11 @@ function shortType(l) { return { apartment: "Flat", independent_house: "House", 
 
 function card(l, badge, team) {
   const real = l.photos?.length;
-  const img = `style="background-image:url('${esc(real ? photoUrl(l.photos[0]) : illusFor(l))}')"`;
+  const img = real ? `style="background-image:url('${esc(photoUrl(l.photos[0]))}')"` : "";
   const priceLine = team && l.closing_price && l.closing_price !== l.asking_price
     ? `${money(l.asking_price, l.deal_type)} <small>closes ${money(l.closing_price, l.deal_type)}</small>` : money(l.asking_price, l.deal_type);
   const size = [l.size_sqft ? `${Math.round(l.size_sqft)} sq ft` : "", perSqft(l)].filter(Boolean).join(" · ");
-  return `<div class="item" data-id="${l.id}"><div class="ph" ${img}>${real ? "" : `<span class="rep">Illustration</span>`}</div><div class="bd">
+  return `<div class="item" data-id="${l.id}">${real ? `<div class="ph" ${img}></div>` : ""}<div class="bd">
     <div class="price">${priceLine}</div>
     <div class="ttl">${esc(title(l))}</div>
     <div class="meta">${esc([l.building, l.locality].filter(Boolean).join(", ") || "Mangalore")}${size ? " · " + size : ""}</div>
@@ -874,7 +874,7 @@ $("#modal").onclick = e => { if (e.target.id === "modal") closeModal(); };
 function openListing(id, team) {
   const l = (team ? S.listings : S.publicListings).find(x => x.id === id);
   if (!l) return toast("That listing isn't available any more");
-  const photos = (l.photos || []).length ? l.photos.map(p => `<img src="${esc(photoUrl(p))}" alt="">`).join("") : `<img src="${illusFor(l)}" alt="Illustration">`;
+  const photos = (l.photos || []).map(p => `<img src="${esc(photoUrl(p))}" alt="">`).join("");
   const kv = [["Type", TYPES[l.property_type]], ["Size", l.size_sqft && Math.round(l.size_sqft) + " sq ft"], ["Locality", l.locality], ["Building", l.building], ["Floor", l.floor], ["Facing", l.facing], ["Furnishing", l.furnishing], ["Deposit", l.deposit && money(l.deposit)], ["Rate", perSqft(l)], ["Maintenance", l.maintenance && money(l.maintenance) + "/mo"],
     ["Possession", l.possession === "ready" ? "Ready to move" : l.possession === "under_construction" ? "Under construction" : null], ["Age", l.age_years != null && l.age_years !== "" ? (+l.age_years === 0 ? "New" : l.age_years + " years") : null],
     ["Approvals", approvalList(l).join(", ")], ["RERA no.", l.rera_number], ["Price", l.negotiable === false ? "Fixed" : "Negotiable"], ["Ref", "#" + l.ref_code]].filter(x => x[1]);
