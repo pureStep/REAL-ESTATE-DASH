@@ -73,6 +73,16 @@ a.btn{text-decoration:none;display:inline-block;text-align:center}
 .item .ph{position:relative}
 .amen{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.amen span{font-size:12px;background:#f5f5f4;border-radius:999px;padding:3px 9px}
 .pricehint{font-size:12px;color:var(--g);margin-top:3px;min-height:16px}
+.rows{display:grid;grid-template-columns:1fr;gap:6px}@media(min-width:700px){.rows{grid-template-columns:1fr 1fr}}
+.rowi{flex-direction:row;align-items:center;gap:10px;padding:6px 10px 6px 6px;border-radius:12px}
+.rowi .th{width:56px;height:56px;border-radius:9px;object-fit:cover;flex:none;background:#e7e5e4}
+.rowi .rb{flex:1;min-width:0}.rowi .r1{display:flex;align-items:center;gap:6px}
+.rowi .rp{font-weight:700;font-size:15px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rowi .rp small{font-weight:500;color:var(--mut);font-size:12px}
+.rowi .r2{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rowi .r3{font-size:11.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rowi .mt{color:#3f6212;font-weight:600}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;background:#a8a29e}.dot.available{background:#16a34a}.dot.negotiating{background:#d97706}.dot.sold,.dot.rented{background:#dc2626}.dot.on_hold{background:#4f46e5}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--mut);margin:-4px 0 8px}.legend span{display:inline-flex;align-items:center;gap:4px}
+.stats.sm .stat{padding:6px}.stats.sm .stat b{font-size:16px}
 .private{border-left:3px solid var(--amber);padding-left:10px}
 </style>
 </head>
@@ -612,6 +622,19 @@ function describeQuery(q) {
 }
 
 // ---------- Rendering ----------
+// Compact one-line row for the team inventory, so many listings fit on one screen.
+function row(l, badge) {
+  const real = l.photos?.length;
+  const src = real ? photoUrl(l.photos[0]) : illusFor(l);
+  const close = l.closing_price && l.closing_price !== l.asking_price ? ` <small>→ ${money(l.closing_price, l.deal_type)}</small>` : "";
+  const bits = [l.bhk ? l.bhk + " BHK" : "", shortType(l), l.locality, l.size_sqft ? Math.round(l.size_sqft) + " sqft" : ""].filter(Boolean).join(" · ");
+  return `<div class="item rowi" data-id="${l.id}"><img class="th" src="${esc(src)}" alt="" loading="lazy">
+    <div class="rb"><div class="r1"><span class="rp">${money(l.asking_price, l.deal_type)}${close}</span><span class="dot ${l.status}" title="${STATUSES[l.status] || l.status}"></span></div>
+    <div class="r2">${esc(bits)}</div>
+    <div class="r3">${l.building ? esc(l.building) + " · " : ""}#${esc(l.ref_code)}${badge ? ` · <b class="mt">${badge}</b>` : ""}${l.deal_type === "rent" ? " · Rent" : ""}</div></div></div>`;
+}
+function shortType(l) { return { apartment: "Flat", independent_house: "House", villa: "Villa", plot: "Plot", land: "Land", shop: "Shop", office: "Office", commercial: "Commercial" }[l.property_type] || ""; }
+
 function card(l, badge, team) {
   const real = l.photos?.length;
   const img = `style="background-image:url('${esc(real ? photoUrl(l.photos[0]) : illusFor(l))}')"`;
@@ -812,12 +835,12 @@ function wireCards(team) { document.querySelectorAll(".item").forEach(it => it.o
 function renderInventory(app) {
   const L = S.listings;
   const cnt = s => L.filter(l => l.status === s).length;
-  app.innerHTML = `<div class="stats"><div class="stat"><b>${L.length}</b><span>Total</span></div><div class="stat"><b>${cnt("available")}</b><span>Available</span></div><div class="stat"><b>${cnt("negotiating")}</b><span>Negotiating</span></div><div class="stat"><b>${cnt("sold") + cnt("rented")}</b><span>Closed</span></div></div>
-   ${searchBar("Search: 2 bhk under 55 lakh in Shivbagh")}${chips(true)}<div id="qd"></div><div class="list" id="res"></div>`;
+  app.innerHTML = `<div class="stats sm"><div class="stat"><b>${L.length}</b><span>Total</span></div><div class="stat"><b>${cnt("available")}</b><span>Available</span></div><div class="stat"><b>${cnt("negotiating")}</b><span>Negotiating</span></div><div class="stat"><b>${cnt("sold") + cnt("rented")}</b><span>Closed</span></div></div>
+   ${searchBar("Search: 2 bhk under 55 lakh in Shivbagh")}${chips(true)}<div class="legend"><span><i class="dot available"></i>Available</span><span><i class="dot negotiating"></i>Negotiating</span><span><i class="dot sold"></i>Sold/Rented</span><span><i class="dot on_hold"></i>On hold</span></div><div id="qd"></div><div class="rows" id="res"></div>`;
   const rerun = () => {
     const res = applySearch(L, searchQ, S.query, true);
     $("#qd").innerHTML = S.query ? `<div class="understood">${res.length} match${res.length === 1 ? "" : "es"}${describeQuery(searchQ) ? " for " + esc(describeQuery(searchQ)) : ""}</div>` : "";
-    $("#res").innerHTML = res.length ? res.map(r => card(r.l, r.badge, true)).join("") : `<div class="empty">${L.length ? "Nothing matches — try fewer filters." : "No listings yet. Tap <b>Add</b> and record your first one."}</div>`;
+    $("#res").innerHTML = res.length ? res.map(r => row(r.l, r.badge)).join("") : `<div class="empty">${L.length ? "Nothing matches — try fewer filters." : "No listings yet. Tap <b>Add</b> and record your first one."}</div>`;
     wireCards(true);
   };
   wireSearch(rerun); rerun();
