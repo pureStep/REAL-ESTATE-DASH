@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mangalore Property Inventory</title>
+<meta name="theme-color" content="#14532d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Inventory">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2314532d'/%3E%3Cpath d='M14 34 32 18l18 16v14H38V38H26v10H14z' fill='%23fef3c7'/%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{--g:#14532d;--g2:#166534;--gl:#dcfce7;--amber:#b45309;--al:#fef3c7;--red:#b91c1c;--rl:#fee2e2;--ink:#1c1917;--mut:#78716c;--line:#e7e5e4;--bg:#fafaf9;--card:#fff;--r:14px}
+*{box-sizing:border-box}html,body{margin:0}body{font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:20;background:var(--g);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px}
+header h1{font-size:17px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header button{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:999px;padding:6px 12px;font-size:13px}
+main{max-width:860px;margin:0 auto;padding:14px}
+.tabs{position:fixed;bottom:0;left:0;right:0;z-index:20;background:#fff;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{flex:1;border:0;background:none;padding:10px 0 8px;font-size:12px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabs button.on{color:var(--g);font-weight:600}.tabs svg{width:22px;height:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+h2{font-size:18px;margin:4px 0 12px}h3{font-size:15px;margin:0 0 8px}
+.mic{display:flex;flex-direction:column;align-items:center;gap:10px;padding:8px 0 4px}
+.micbtn{width:84px;height:84px;border-radius:50%;border:0;background:var(--g);color:#fff;display:grid;place-items:center;box-shadow:0 6px 18px rgba(20,83,45,.3)}
+.micbtn svg{width:36px;height:36px}.micbtn.live{background:var(--red);animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(185,28,28,.45)}100%{box-shadow:0 0 0 22px rgba(185,28,28,0)}}
+.hint{color:var(--mut);font-size:13px;text-align:center}
+textarea,input,select{width:100%;font:inherit;padding:10px 12px;border:1px solid #d6d3d1;border-radius:10px;background:#fff;color:var(--ink)}
+textarea{min-height:92px;resize:vertical}
+label{display:block;font-size:12px;color:var(--mut);margin:0 0 4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid .full{grid-column:1/-1}
+.btn{border:0;border-radius:10px;padding:11px 16px;font:inherit;font-weight:600;background:var(--g);color:#fff}
+a.btn{text-decoration:none;display:inline-block;text-align:center}
+.btn.sec{background:#f5f5f4;color:var(--ink)}.btn.warn{background:var(--rl);color:var(--red)}.btn.sm{padding:7px 11px;font-size:13px}
+.btn:disabled{opacity:.5}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.grow{flex:1}
+.search{display:flex;gap:8px;position:sticky;top:56px;z-index:10;background:var(--bg);padding:6px 0 8px}
+.search input{flex:1}.iconbtn{width:44px;flex:none;border:0;border-radius:10px;background:var(--g);color:#fff;display:grid;place-items:center}
+.iconbtn.live{background:var(--red)}.iconbtn svg{width:20px;height:20px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.chip{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:13px;color:var(--ink)}
+.chip.on{background:var(--g);color:#fff;border-color:var(--g)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--mut)}
+.list{display:grid;grid-template-columns:1fr;gap:10px}@media(min-width:640px){.list{grid-template-columns:1fr 1fr}}
+.item{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
+.item .ph{aspect-ratio:16/9;background:#e7e5e4 center/cover no-repeat;display:grid;place-items:center;color:#a8a29e;font-size:12px}
+.item .bd{padding:11px 12px}.price{font-size:18px;font-weight:700}.price small{font-weight:500;color:var(--mut);font-size:12px}
+.meta{color:var(--mut);font-size:13px}.ttl{font-weight:600;margin:2px 0}
+.tag{display:inline-block;font-size:11px;font-weight:600;border-radius:6px;padding:2px 7px;margin-right:4px;background:#f5f5f4;color:var(--ink)}
+.tag.available{background:var(--gl);color:var(--g)}.tag.negotiating{background:var(--al);color:var(--amber)}
+.tag.sold,.tag.rented{background:var(--rl);color:var(--red)}.tag.on_hold{background:#e0e7ff;color:#3730a3}.tag.match{background:#ecfccb;color:#3f6212}
+.empty{text-align:center;color:var(--mut);padding:30px 10px}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center}
+.modal.on{display:flex}.sheet{background:var(--bg);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom))}
+.photos{display:flex;gap:8px;overflow-x:auto;margin:8px 0}.photos img{height:120px;border-radius:10px;flex:none}
+.photos .x{position:relative;flex:none}.photos .x button{position:absolute;top:4px;right:4px;border:0;border-radius:50%;width:24px;height:24px;background:rgba(0,0,0,.6);color:#fff}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1c1917;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;opacity:0;transition:.25s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}.understood{background:var(--gl);border-radius:10px;padding:8px 10px;font-size:13px;color:var(--g);margin-bottom:10px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}.kv dt{color:var(--mut)}.kv dd{margin:0}
+.hide{display:none!important}a{color:var(--g2)}
+.score{display:inline-grid;place-items:center;min-width:44px;height:26px;border-radius:999px;font-size:12px;font-weight:700;background:var(--gl);color:var(--g);padding:0 8px}
+.score.mid{background:var(--al);color:var(--amber)}
+.mrow{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.mrow:first-child{border-top:0}
+.typechips{display:flex;flex-wrap:wrap;gap:6px}.typechips label{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;color:var(--ink);margin:0;background:#fff}
+.typechips input{width:auto;margin:0}
+.lead{cursor:pointer}.hero{position:relative;border-radius:18px;overflow:hidden;margin-bottom:12px;min-height:190px;display:flex;align-items:flex-end;background:#14532d center/cover no-repeat;color:#fff}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.75))}
+.hero .in{position:relative;z-index:1;padding:16px}.hero b{font-size:20px;display:block}.hero span{font-size:13px;opacity:.9}
+.ph .rep{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:2px 6px;border-radius:5px}
+.item .ph{position:relative}
+.amen{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.amen span{font-size:12px;background:#f5f5f4;border-radius:999px;padding:3px 9px}
+.pricehint{font-size:12px;color:var(--g);margin-top:3px;min-height:16px}
+.private{border-left:3px solid var(--amber);padding-left:10px}
+</style>
+</head>
+<body>
+<header><h1 id="brand">Mangalore Property Inventory</h1><button id="authBtn">Team login</button></header>
+<main id="app"></main>
+<nav class="tabs hide" id="tabs">
+  <button data-tab="add" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add</button>
+  <button data-tab="inventory"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 4l9 7v9H3z"/></svg>Inventory</button>
+  <button data-tab="leads"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.6c2.2.6 3.5 2.4 3.5 5.4"/></svg>Leads</button>
+  <button data-tab="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Team</button>
+</nav>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/*__PARSER__*/
+</script>
+<script>
+const SUPABASE_URL = "__URL__";
+const SUPABASE_KEY = "__KEY__";
+const BUCKET = "listing-photos";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5"/></svg>';
+const TYPES = { apartment: "Apartment", villa: "Villa", independent_house: "Independent house", commercial: "Commercial", shop: "Shop", office: "Office", plot: "Plot", land: "Land" };
+const STATUSES = { available: "Available", negotiating: "Negotiating", sold: "Sold", rented: "Rented", on_hold: "On hold" };
+
+const LEAD_STATUSES = { new: "New", contacted: "Contacted", site_visit: "Site visit", negotiating: "Negotiating", closed: "Closed", lost: "Lost" };
+const S = { session: null, role: null, tab: "add", listings: [], leads: [], leadDraft: null, leadFilter: "open", publicListings: [], settings: {}, filters: { deal: null, status: "active", type: null }, query: "", ai: null, draft: null, publicMode: false };
+
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 2600); }
+function money(n, deal) {
+  if (n == null || n === "" || isNaN(n)) return "—";
+  n = +n; let s;
+  if (n >= 1e7) s = (n / 1e7).toFixed(2).replace(/\.?0+$/, "") + " Cr";
+  else if (n >= 1e5) s = (n / 1e5).toFixed(2).replace(/\.?0+$/, "") + " L";
+  else if (n >= 1e3) s = (n / 1e3).toFixed(1).replace(/\.0$/, "") + "k";
+  else s = String(n);
+  return "₹" + s + (deal === "rent" ? "/mo" : "");
+}
+function title(l) {
+  const t = TYPES[l.property_type] || "Property";
+  const b = l.bhk ? `${l.bhk} BHK ` : "";
+  return `${b}${l.bhk && l.property_type === "apartment" ? "Flat" : t} for ${l.deal_type === "rent" ? "rent" : "sale"}`;
+}
+function knownLocalities() {
+  const s = new Set(MANGALORE_LOCALITIES);
+  [...S.listings, ...S.publicListings].forEach(l => l.locality && s.add(l.locality));
+  return [...s];
+}
+function photoUrl(p) { return sb.storage.from(BUCKET).getPublicUrl(p).data.publicUrl; }
+
+
+// ---------- Illustrations (original artwork; used when a listing has no photos) ----------
+const ILL = {
+  apartment: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fde7c7"/><stop offset="1" stop-color="#f6c99a"/></linearGradient></defs><rect width="640" height="360" fill="url(#s)"/><circle cx="520" cy="80" r="38" fill="#fbbf6a"/><path d="M0 300 Q160 270 320 295 T640 290 V360 H0z" fill="#3f7d58"/><rect x="170" y="70" width="170" height="240" fill="#e7e1d7"/><rect x="340" y="120" width="130" height="190" fill="#d8cfc2"/>${Array.from({length:6},(_,r)=>Array.from({length:4},(_,c)=>`<rect x="${186+c*38}" y="${88+r*36}" width="24" height="22" rx="2" fill="${(r+c)%3?'#7fa7c4':'#f3d9a4'}"/>`).join('')).join('')}${Array.from({length:5},(_,r)=>Array.from({length:3},(_,c)=>`<rect x="${354+c*38}" y="${136+r*32}" width="24" height="20" rx="2" fill="${(r+c)%2?'#7fa7c4':'#f3d9a4'}"/>`).join('')).join('')}<rect x="232" y="270" width="46" height="40" fill="#8a6a4a"/><ellipse cx="120" cy="290" rx="40" ry="50" fill="#2f6a47"/><rect x="116" y="300" width="8" height="20" fill="#5b4632"/><ellipse cx="530" cy="292" rx="34" ry="42" fill="#2f6a47"/></svg>`,
+  house: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="#cfe8f3"/><path d="M0 290 Q200 260 400 285 T640 280 V360 H0z" fill="#4c8b5f"/><path d="M180 175 L330 80 L480 175 Z" fill="#a8432a"/><rect x="200" y="172" width="260" height="130" fill="#f2e6d2"/><rect x="300" y="220" width="56" height="82" fill="#7a5233"/><rect x="226" y="200" width="52" height="44" fill="#86b3cf" stroke="#fff" stroke-width="4"/><rect x="380" y="200" width="52" height="44" fill="#86b3cf" stroke="#fff" stroke-width="4"/><path d="M60 300 q30-90 60 0z M520 300 q35-110 70 0z" fill="#2e6b45"/><rect x="0" y="300" width="640" height="10" fill="#d9c8a9"/><g fill="#3b7a4f">${Array.from({length:14},(_,i)=>`<circle cx="${20+i*46}" cy="318" r="12"/>`).join('')}</g></svg>`,
+  villa: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="#fbe3cf"/><circle cx="110" cy="80" r="34" fill="#f9b872"/><rect x="0" y="300" width="640" height="60" fill="#5d9a6b"/><rect x="140" y="150" width="360" height="150" fill="#fdfaf4"/><rect x="120" y="140" width="400" height="16" fill="#3c3c3c"/><rect x="250" y="90" width="200" height="60" fill="#f1ebe0"/><rect x="236" y="82" width="228" height="12" fill="#3c3c3c"/><rect x="160" y="180" width="90" height="90" fill="#7fb0cf"/><rect x="270" y="180" width="60" height="120" fill="#6b4a32"/><rect x="350" y="180" width="130" height="70" fill="#7fb0cf"/><rect x="270" y="104" width="160" height="34" fill="#7fb0cf"/><rect x="150" y="300" width="300" height="14" fill="#56b6d6"/><path d="M560 300 c-6-70 4-120 10-150 m0 0 c-30 0-50 20-60 40 m60-40 c30 0 50 20 60 40 m-60-40 c-20-20-50-20-60-10 m60 10 c20-20 50-20 60-10" stroke="#3f6b3f" stroke-width="9" fill="none"/></svg>`,
+  plot: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="#d9eef7"/><path d="M0 170 Q160 140 320 165 T640 160 V360 H0z" fill="#8fbf6a"/><path d="M80 330 L200 190 L520 190 L600 330 Z" fill="#b9d98f" stroke="#fff" stroke-width="4" stroke-dasharray="14 10"/><g fill="#e2522f"><rect x="196" y="176" width="6" height="22"/><rect x="516" y="176" width="6" height="22"/><rect x="76" y="314" width="6" height="22"/><rect x="596" y="314" width="6" height="22"/></g><path d="M40 170 q20-60 40 0z M560 160 q25-70 50 0z M300 160 q15-40 30 0z" fill="#3f7d4f"/></svg>`,
+  commercial: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="#e6ecf2"/><rect x="0" y="310" width="640" height="50" fill="#9aa5ad"/><rect x="120" y="60" width="400" height="250" fill="#2f3e4a"/>${Array.from({length:5},(_,r)=>Array.from({length:8},(_,c)=>`<rect x="${136+c*48}" y="${76+r*34}" width="36" height="24" fill="${(r*c)%4?'#9fc3dc':'#e7f0f6'}"/>`).join('')).join('')}<rect x="120" y="250" width="400" height="60" fill="#c8a24a"/><rect x="140" y="262" width="110" height="48" fill="#bfe0f0"/><rect x="265" y="262" width="110" height="48" fill="#bfe0f0"/><rect x="390" y="262" width="110" height="48" fill="#bfe0f0"/></svg>`,
+  interior: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="#efe6da"/><rect y="270" width="640" height="90" fill="#b98a5e"/><rect x="380" y="50" width="200" height="170" fill="#bcdcef" stroke="#fff" stroke-width="10"/><line x1="480" y1="50" x2="480" y2="220" stroke="#fff" stroke-width="6"/><rect x="60" y="190" width="260" height="70" rx="18" fill="#6d8a73"/><rect x="60" y="160" width="260" height="50" rx="16" fill="#7f9c85"/><rect x="80" y="260" width="10" height="18" fill="#4a3a2a"/><rect x="290" y="260" width="10" height="18" fill="#4a3a2a"/><rect x="150" y="80" width="90" height="60" fill="#d58b5a"/><ellipse cx="420" cy="290" rx="120" ry="14" fill="#e9d7bf"/><rect x="360" y="250" width="120" height="12" rx="6" fill="#3d3d3d"/><path d="M560 270 c-10-50 10-80 20-90 c10 10 30 40 20 90z" fill="#3f7d4f"/><rect x="560" y="250" width="40" height="22" fill="#c2643b"/><line x1="200" y1="0" x2="200" y2="40" stroke="#444" stroke-width="3"/><ellipse cx="200" cy="48" rx="26" ry="12" fill="#f4c46b"/></svg>`,
+};
+const svgUri = s => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(s);
+function illusFor(l) {
+  const t = l.property_type;
+  const k = t === "villa" ? "villa" : t === "independent_house" ? "house" : (t === "plot" || t === "land") ? "plot" : ["shop", "office", "commercial"].includes(t) ? "commercial" : "apartment";
+  return svgUri(ILL[k]);
+}
+function heroBg() { return S.settings.hero_photo ? photoUrl(S.settings.hero_photo) : svgUri(ILL.interior); }
+function perSqft(l) { return l.asking_price && l.size_sqft && l.deal_type === "sale" ? "₹" + Math.round(l.asking_price / l.size_sqft).toLocaleString("en-IN") + "/sq ft" : ""; }
+function amenityList(l) { return (l.amenities || []).map(a => AMENITIES[a] || a); }
+function approvalList(l) { return (l.approvals || []).map(a => APPROVALS[a] || a); }
+
+// ---------- Speech ----------
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
+function listen(btn, onText, { continuous = true } = {}) {
+  if (!SR) { toast("Voice not supported in this browser — tap the keyboard mic instead"); return; }
+  if (rec) { rec.stop(); return; }
+  rec = new SR(); rec.lang = "en-IN"; rec.interimResults = true; rec.continuous = continuous;
+  let finalText = "";
+  rec.onresult = e => {
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i]; if (r.isFinal) finalText += r[0].transcript + " "; else interim += r[0].transcript;
+    }
+    onText((finalText + interim).trim(), false);
+  };
+  rec.onerror = e => { if (e.error === "not-allowed") toast("Allow microphone access to use voice"); };
+  rec.onend = () => { btn.classList.remove("live"); rec = null; onText(finalText.trim(), true); };
+  btn.classList.add("live"); rec.start();
+}
+
+// ---------- AI parsing (optional, falls back to on-device parser) ----------
+async function smartParse(text, mode) {
+  const known = knownLocalities();
+  if (S.ai !== false && S.session) {
+    try {
+      const { data, error } = await sb.functions.invoke("parse-listing", { body: { text, mode, localities: known } });
+      if (!error && data && !data.error) { S.ai = true; return { ...localParse(text, mode, known), ...clean(data) }; }
+      if (error && /501|no_key/.test(String(error.message || "") + String(error.context?.status || ""))) S.ai = false;
+    } catch (e) { S.ai = false; }
+  }
+  return localParse(text, mode, known);
+}
+function localParse(text, mode, known) { return mode === "search" ? parseSearch(text, known) : mode === "lead" ? parseLead(text, known) : parseListing(text, known); }
+function clean(o) { const r = {}; for (const k in o) if (o[k] !== null && o[k] !== "" && !(Array.isArray(o[k]) && !o[k].length)) r[k] = o[k]; return r; }
+
+// ---------- Search ----------
+function sameLoc(a, b) { if (!a || !b) return false; return fuzzyNorm(a) === fuzzyNorm(b) || snapLocality(a, [b]) === b; }
+function applySearch(rows, q, text, team) {
+  const hasStructured = q && (q.deal_type || q.property_type || q.bhk || q.localities?.length || q.min_price || q.max_price || q.min_size || q.max_size || q.furnishing);
+  const out = [];
+  for (const l of rows) {
+    if (S.filters.deal && l.deal_type !== S.filters.deal) continue;
+    if (S.filters.type && l.property_type !== S.filters.type) continue;
+    if (team) {
+      if (S.filters.status === "active" && !["available", "negotiating", "on_hold"].includes(l.status)) continue;
+      if (S.filters.status && S.filters.status !== "active" && S.filters.status !== "all" && l.status !== S.filters.status) continue;
+    }
+    let badge = null;
+    if (text && hasStructured) {
+      if (q.deal_type && l.deal_type !== q.deal_type) continue;
+      if (q.property_type && l.property_type !== q.property_type && !(q.property_type === "plot" && l.property_type === "land")) continue;
+      if (q.bhk && +l.bhk !== +q.bhk) continue;
+      if (q.localities?.length && !q.localities.some(x => sameLoc(l.locality, x))) continue;
+      if (q.furnishing && l.furnishing !== q.furnishing) continue;
+      if (q.min_size && !(l.size_sqft >= q.min_size * 0.95)) continue;
+      if (q.max_size && !(l.size_sqft <= q.max_size * 1.05)) continue;
+      const ask = +l.asking_price || null, close = team ? (+l.closing_price || ask) : ask;
+      if (q.max_price) {
+        if (!close) continue;
+        if (ask && ask <= q.max_price) badge = "Within budget";
+        else if (close <= q.max_price) badge = "Can close within budget";
+        else if (close <= q.max_price * 1.1) badge = "Slightly above budget";
+        else continue;
+      }
+      if (q.min_price && !(ask >= q.min_price * 0.95)) continue;
+    } else if (text) {
+      const hay = [l.ref_code, l.locality, l.building, l.city, TYPES[l.property_type], l.bhk && l.bhk + " bhk", l.deal_type, l.facing, l.furnishing, l.notes, ...amenityList(l), ...approvalList(l), l.possession === "ready" ? "ready to move" : l.possession, team && l.owner_name, team && l.owner_phone].filter(Boolean).join(" ").toLowerCase();
+      const words = text.toLowerCase().split(/\s+/).filter(w => w.length > 1);
+      if (!words.every(w => hay.includes(w) || hay.split(/\s+/).some(h => h.length > 3 && snapLocality(w, [h])))) continue;
+    }
+    out.push({ l, badge });
+  }
+  return out;
+}
+function describeQuery(q) {
+  if (!q) return "";
+  const p = [];
+  if (q.bhk) p.push(q.bhk + " BHK"); if (q.property_type) p.push(TYPES[q.property_type]); if (q.deal_type) p.push("for " + q.deal_type);
+  if (q.localities?.length) p.push("in " + q.localities.join(" / "));
+  if (q.min_price && q.max_price) p.push(`${money(q.min_price)}–${money(q.max_price)}`); else if (q.max_price) p.push("up to " + money(q.max_price)); else if (q.min_price) p.push("from " + money(q.min_price));
+  if (q.min_size) p.push(q.min_size + "+ sq ft"); if (q.max_size) p.push("≤ " + q.max_size + " sq ft"); if (q.furnishing) p.push(q.furnishing);
+  return p.join(" · ");
+}
+
+// ---------- Rendering ----------
+function card(l, badge, team) {
+  const real = l.photos?.length;
+  const img = `style="background-image:url('${esc(real ? photoUrl(l.photos[0]) : illusFor(l))}')"`;
+  const priceLine = team && l.closing_price && l.closing_price !== l.asking_price
+    ? `${money(l.asking_price, l.deal_type)} <small>closes ${money(l.closing_price, l.deal_type)}</small>` : money(l.asking_price, l.deal_type);
+  const size = [l.size_sqft ? `${Math.round(l.size_sqft)} sq ft` : "", perSqft(l)].filter(Boolean).join(" · ");
+  return `<div class="item" data-id="${l.id}"><div class="ph" ${img}>${real ? "" : `<span class="rep">Illustration</span>`}</div><div class="bd">
+    <div class="price">${priceLine}</div>
+    <div class="ttl">${esc(title(l))}</div>
+    <div class="meta">${esc([l.building, l.locality].filter(Boolean).join(", ") || "Mangalore")}${size ? " · " + size : ""}</div>
+    <div style="margin-top:6px"><span class="tag ${l.status}">${STATUSES[l.status] || l.status}</span>${badge ? `<span class="tag match">${badge}</span>` : ""}<span class="tag">#${esc(l.ref_code)}</span></div>
+  </div></div>`;
+}
+
+function render() {
+  const app = $("#app");
+  $("#brand").textContent = S.settings.business_name || "Mangalore Property Inventory";
+  const team = !!S.role && !S.publicMode;
+  $("#tabs").classList.toggle("hide", !team);
+  $("#authBtn").textContent = S.session ? (S.publicMode ? "Team view" : "Client view") : "Team login";
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === S.tab));
+  if (S.session && !S.role && !S.publicMode) return renderNotMember(app);
+  if (!team) return renderPublic(app);
+  if (S.tab === "add") return renderAdd(app);
+  if (S.tab === "inventory") return renderInventory(app);
+  if (S.tab === "leads") return renderLeads(app);
+  if (S.tab === "settings") return renderSettings(app);
+}
+
+function renderNotMember(app) {
+  app.innerHTML = `<div class="card"><h2>Almost there</h2><p>You're signed in as <b>${esc(S.session.user.email)}</b>, but this email isn't on the team yet.</p><p class="meta">Ask the owner to add it under <b>Team → Invite</b>, then tap refresh.</p><div class="row"><button class="btn" id="rf">Refresh</button><button class="btn sec" id="so">Sign out</button></div></div>`;
+  $("#rf").onclick = async () => { await loadRole(); render(); }; $("#so").onclick = () => sb.auth.signOut();
+}
+
+function renderAdd(app) {
+  const d = S.draft;
+  app.innerHTML = `<div class="card"><div class="mic"><button class="micbtn" id="mic" aria-label="Record">${MIC}</button>
+    <div class="hint">Tap and say it the way you'd tell a colleague:<br>“2 BHK for sale in Shivbagh, asking 55, will close at 50, 920 sq ft, owner Ramesh 98450 12345”</div></div>
+    <textarea id="note" placeholder="…or type the details here">${esc(d?.transcript || "")}</textarea>
+    <div class="row" style="margin-top:10px"><button class="btn grow" id="parse">Fill the form</button></div></div>
+    <div id="form"></div>`;
+  const note = $("#note");
+  $("#mic").onclick = e => listen(e.currentTarget, (txt, done) => { note.value = txt; if (done && txt) doParse(); });
+  $("#parse").onclick = doParse;
+  async function doParse() {
+    const text = note.value.trim(); if (!text) return toast("Say or type the property details first");
+    $("#parse").disabled = true; $("#parse").textContent = "Reading…";
+    const p = await smartParse(text, "listing");
+    S.draft = { ...p, transcript: text, photos: [], _files: [] };
+    $("#parse").disabled = false; $("#parse").textContent = "Fill the form";
+    renderForm($("#form"), S.draft, true);
+  }
+  if (d) renderForm($("#form"), d, true);
+}
+
+function field(k, lab, v, type = "text", opts) {
+  if (opts) return `<div><label>${lab}</label><select name="${k}">${opts.map(([val, t]) => `<option value="${val}" ${String(v ?? "") === String(val) ? "selected" : ""}>${t}</option>`).join("")}</select></div>`;
+  return `<div><label>${lab}</label><input name="${k}" type="${type}" inputmode="${type === "number" ? "decimal" : type === "tel" ? "tel" : "text"}" value="${esc(v ?? "")}"></div>`;
+}
+// Reads a price input. Lakh fields accept "125" (lakh), "1.25cr", "1 crore 25 lakh", or a full rupee amount like 12500000.
+function priceValue(inp) {
+  const raw = String(inp.value || "").trim().toLowerCase(); if (!raw) return null;
+  const t = normalizeText(raw);
+  const m = t.match(/(\d+(?:\.\d+)?)\s*(crores?|cr|lakhs?|lacs?|lakh|lac|l|k|thousand)?/); if (!m) return null;
+  const x = parseFloat(m[1]); if (isNaN(x)) return null;
+  if (m[2]) return toRupees(x, m[2]);
+  if (inp.dataset.unit === "lakh") return x >= 10000 ? Math.round(x) : Math.round(x * 1e5);
+  return Math.round(x);
+}
+const lakhs = n => n == null || n === "" ? "" : +(n / 1e5).toFixed(2);
+function priceField(k, lab, v, deal) {
+  const isRent = deal === "rent";
+  return `<div><label>${lab} (${isRent && k !== "deposit" ? "₹ / month" : "₹ lakh · 1 Cr = 100"})</label><input name="${k}" type="text" inputmode="decimal" data-unit="${isRent && k !== "deposit" ? "rupee" : "lakh"}" value="${esc(isRent && k !== "deposit" ? (v ?? "") : lakhs(v))}"></div>`;
+}
+
+function renderForm(el, d, isNew) {
+  const deal = d.deal_type || "sale";
+  el.innerHTML = `<div class="card"><h3>${isNew ? "Check & save" : "Edit listing"}</h3>
+   ${isNew ? `<div class="understood">Understood: ${esc(title(d))}${d.locality ? " in " + esc(d.locality) : ""}${d.asking_price ? ", asking " + money(d.asking_price, deal) : ""}${d.closing_price ? ", closes " + money(d.closing_price, deal) : ""}${d.size_sqft ? ", " + d.size_sqft + " sq ft" : ""}. ${S.ai ? "" : "Fix anything below that's off."}</div>` : ""}
+   <form id="lf" class="grid">
+    ${field("deal_type", "Deal", deal, null, [["sale", "Sale"], ["rent", "Rent"]])}
+    ${field("property_type", "Type", d.property_type || "apartment", null, Object.entries(TYPES))}
+    ${field("bhk", "BHK", d.bhk, "number")}
+    ${field("size_sqft", "Size (sq ft)", d.size_sqft, "number")}
+    <div class="full">${field("locality", "Locality", d.locality).replace("<input", '<input list="locs"')}<datalist id="locs">${knownLocalities().sort().map(x => `<option value="${esc(x)}">`).join("")}</datalist></div>
+    <div class="full">${field("building", "Building / society", d.building)}</div>
+    ${priceField("asking_price", "Asking", d.asking_price, deal)}
+    <div class="private">${priceField("closing_price", "Closing (private)", d.closing_price, deal)}</div>
+    ${deal === "rent" ? priceField("deposit", "Deposit", d.deposit, deal) : ""}
+    ${field("floor", "Floor", d.floor)}
+    ${field("facing", "Facing", d.facing)}
+    ${field("furnishing", "Furnishing", d.furnishing || "", null, [["", "—"], ["unfurnished", "Unfurnished"], ["semi-furnished", "Semi-furnished"], ["furnished", "Furnished"]])}
+    ${field("status", "Status", d.status || "available", null, Object.entries(STATUSES))}
+    <div class="private">${field("owner_name", "Owner name (private)", d.owner_name)}</div>
+    <div class="private">${field("owner_phone", "Owner phone (private)", d.owner_phone, "tel")}</div>
+    ${field("age_years", "Age (years)", d.age_years, "number")}
+    ${field("possession", "Possession", d.possession || "", null, [["", "—"], ["ready", "Ready to move"], ["under_construction", "Under construction"]])}
+    ${field("maintenance", "Maintenance (₹ / month)", d.maintenance, "number")}
+    <div><label>Price</label><label style="display:flex;gap:6px;align-items:center;color:var(--ink);font-size:14px;margin-top:10px"><input type="checkbox" name="negotiable" ${d.negotiable === false ? "" : "checked"} style="width:auto"> Negotiable</label></div>
+    <div class="full"><label>Amenities</label><div class="typechips">${Object.entries(AMENITIES).map(([k, t]) => `<label><input type="checkbox" name="am" value="${k}" ${(d.amenities || []).includes(k) ? "checked" : ""}>${t}</label>`).join("")}</div></div>
+    <div class="full"><label>Approvals & documents</label><div class="typechips">${Object.entries(APPROVALS).map(([k, t]) => `<label><input type="checkbox" name="ap" value="${k}" ${(d.approvals || []).includes(k) ? "checked" : ""}>${t}</label>`).join("")}</div></div>
+    <div class="full">${field("rera_number", "RERA number (optional)", d.rera_number)}</div>
+    <div class="full private"><label>Google Maps location (private)</label><div class="row"><input name="maps_url" class="grow" placeholder="Paste a Google Maps link" value="${esc(d.maps_url || "")}"><button type="button" class="btn sec sm" id="geo">📍 Here</button></div></div>
+    <div class="full"><label>Notes</label><textarea name="notes" style="min-height:60px">${esc(d.notes || "")}</textarea></div>
+    <div class="full"><label><input type="checkbox" name="is_public" ${d.is_public === false ? "" : "checked"} style="width:auto;vertical-align:middle"> Show on the client page (owner details & closing price always stay private)</label></div>
+    <div class="full"><label>Photos</label><input type="file" id="ph" accept="image/*" multiple><div class="photos" id="phs"></div></div>
+    <div class="full row"><button class="btn grow" type="submit" id="sv">${isNew ? "Save listing" : "Save changes"}</button>${isNew ? `<button class="btn sec" type="button" id="cl">Clear</button>` : ""}</div>
+   </form></div>`;
+  const f = $("#lf", el);
+  f.querySelectorAll("[data-unit]").forEach(inp => {
+    const hint = document.createElement("div"); hint.className = "pricehint"; inp.after(hint);
+    const upd = () => { const v = priceValue(inp); hint.textContent = v ? "= " + money(v) : ""; };
+    inp.addEventListener("input", upd); upd();
+  });
+  $("#geo", el).onclick = () => {
+    if (!navigator.geolocation) return toast("Location not available on this device");
+    toast("Getting your location…");
+    navigator.geolocation.getCurrentPosition(p => { f.maps_url.value = `https://www.google.com/maps?q=${p.coords.latitude.toFixed(6)},${p.coords.longitude.toFixed(6)}`; toast("Location added"); },
+      () => toast("Couldn't get location — allow location access"), { enableHighAccuracy: true, timeout: 15000 });
+  };
+  f.deal_type.onchange = () => { Object.assign(d, readForm(f, d)); d.deal_type = f.deal_type.value; renderForm(el, d, isNew); };
+  const drawPhotos = () => {
+    $("#phs", el).innerHTML = [...(d.photos || []).map((p, i) => `<div class="x"><img src="${esc(photoUrl(p))}"><button type="button" data-rm="${i}">×</button></div>`),
+      ...(d._files || []).map((file, i) => `<div class="x"><img src="${URL.createObjectURL(file)}"><button type="button" data-rmf="${i}">×</button></div>`)].join("");
+    $("#phs", el).querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { d._removed = [...(d._removed || []), d.photos[b.dataset.rm]]; d.photos.splice(b.dataset.rm, 1); drawPhotos(); });
+    $("#phs", el).querySelectorAll("[data-rmf]").forEach(b => b.onclick = () => { d._files.splice(b.dataset.rmf, 1); drawPhotos(); });
+  };
+  d._files = d._files || []; drawPhotos();
+  $("#ph", el).onchange = e => { d._files.push(...e.target.files); e.target.value = ""; drawPhotos(); };
+  if ($("#cl", el)) $("#cl", el).onclick = () => { S.draft = null; render(); };
+  f.onsubmit = async e => {
+    e.preventDefault(); const btn = $("#sv", el); btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      const row = readForm(f, d);
+      let id = d.id;
+      if (isNew) { row.transcript = d.transcript; const { data, error } = await sb.from("listings").insert(row).select().single(); if (error) throw error; id = data.id; }
+      const uploaded = [];
+      for (const file of d._files) uploaded.push(await uploadPhoto(id, file));
+      const photos = [...(d.photos || []), ...uploaded];
+      const upd = isNew ? { photos } : { ...row, photos };
+      const { error } = await sb.from("listings").update(upd).eq("id", id); if (error) throw error;
+      if (d._removed?.length) await sb.storage.from(BUCKET).remove(d._removed);
+      await loadListings();
+      const saved = S.listings.find(x => x.id === id);
+      const nLeads = saved ? leadsFor(saved).length : 0;
+      toast((isNew ? "Saved to inventory ✓" : "Updated ✓") + (nLeads ? ` · matches ${nLeads} lead${nLeads > 1 ? "s" : ""}` : ""));
+      if (isNew) { S.draft = null; render(); } else { closeModal(); render(); }
+    } catch (err) { toast("Couldn't save: " + (err.message || err)); btn.disabled = false; btn.textContent = "Try again"; }
+  };
+}
+function readForm(f, d) {
+  const g = n => f[n] ? f[n].value.trim() : "";
+  const num = n => f[n] ? (f[n].dataset.unit ? priceValue(f[n]) : (g(n) === "" || isNaN(parseFloat(g(n))) ? null : parseFloat(g(n)))) : null;
+  return { amenities: [...f.querySelectorAll("[name=am]:checked")].map(x => x.value), approvals: [...f.querySelectorAll("[name=ap]:checked")].map(x => x.value),
+    age_years: num("age_years"), possession: g("possession") || null, maintenance: num("maintenance"), negotiable: f.negotiable.checked,
+    rera_number: g("rera_number") || null, maps_url: g("maps_url") || null,
+    deal_type: g("deal_type"), property_type: g("property_type"), bhk: num("bhk"), size_sqft: num("size_sqft"), locality: g("locality") || null, building: g("building") || null,
+    asking_price: num("asking_price"), closing_price: num("closing_price"), deposit: f.deposit ? num("deposit") : (d.deposit ?? null), floor: g("floor") || null, facing: g("facing") || null,
+    furnishing: g("furnishing") || null, status: g("status"), owner_name: g("owner_name") || null, owner_phone: g("owner_phone") || null, notes: g("notes") || null, is_public: f.is_public.checked };
+}
+async function uploadPhoto(id, file) {
+  const blob = await shrink(file);
+  const path = `${id}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+  const { error } = await sb.storage.from(BUCKET).upload(path, blob, { contentType: "image/jpeg", upsert: false });
+  if (error) throw error; return path;
+}
+function shrink(file) {
+  return new Promise(res => {
+    const img = new Image(); img.onload = () => {
+      const m = 1600, k = Math.min(1, m / Math.max(img.width, img.height));
+      const c = document.createElement("canvas"); c.width = img.width * k; c.height = img.height * k;
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => res(b || file), "image/jpeg", 0.82);
+    }; img.onerror = () => res(file); img.src = URL.createObjectURL(file);
+  });
+}
+
+let searchQ = null;
+function searchBar(placeholder) {
+  return `<div class="search"><input id="q" type="search" placeholder="${placeholder}" value="${esc(S.query)}"><button class="iconbtn" id="qmic" aria-label="Voice search">${MIC}</button></div>`;
+}
+function chips(team) {
+  const c = (key, val, lab) => `<button class="chip ${S.filters[key] === val ? "on" : ""}" data-k="${key}" data-v="${val ?? ""}">${lab}</button>`;
+  return `<div class="chips">${c("deal", null, "All")}${c("deal", "sale", "Sale")}${c("deal", "rent", "Rent")}
+   ${c("type", "apartment", "Flats")}${c("type", "independent_house", "Houses")}${c("type", "villa", "Villas")}${c("type", "plot", "Plots")}${c("type", "shop", "Shops")}${c("type", "office", "Offices")}${c("type", "commercial", "Commercial")}
+   ${team ? c("status", "active", "Active") + c("status", "negotiating", "Negotiating") + c("status", "sold", "Sold") + c("status", "rented", "Rented") + c("status", "all", "Everything") : ""}</div>`;
+}
+function wireSearch(rerun) {
+  const q = $("#q");
+  let t; q.oninput = () => { clearTimeout(t); t = setTimeout(async () => { S.query = q.value; searchQ = S.query ? await smartParse(S.query, "search") : null; rerun(); }, 350); };
+  $("#qmic").onclick = e => listen(e.currentTarget, async (txt, done) => { q.value = txt; if (done && txt) { S.query = txt; searchQ = await smartParse(txt, "search"); rerun(); } }, { continuous: false });
+  document.querySelectorAll(".chip").forEach(b => b.onclick = () => {
+    const k = b.dataset.k, v = b.dataset.v || null;
+    S.filters[k] = (S.filters[k] === v && k !== "status" && k !== "deal") ? null : v; render();
+  });
+}
+function wireCards(team) { document.querySelectorAll(".item").forEach(it => it.onclick = () => openListing(it.dataset.id, team)); }
+
+function renderInventory(app) {
+  const L = S.listings;
+  const cnt = s => L.filter(l => l.status === s).length;
+  app.innerHTML = `<div class="stats"><div class="stat"><b>${L.length}</b><span>Total</span></div><div class="stat"><b>${cnt("available")}</b><span>Available</span></div><div class="stat"><b>${cnt("negotiating")}</b><span>Negotiating</span></div><div class="stat"><b>${cnt("sold") + cnt("rented")}</b><span>Closed</span></div></div>
+   ${searchBar("Search: 2 bhk under 55 lakh in Shivbagh")}${chips(true)}<div id="qd"></div><div class="list" id="res"></div>`;
+  const rerun = () => {
+    const res = applySearch(L, searchQ, S.query, true);
+    $("#qd").innerHTML = S.query ? `<div class="understood">${res.length} match${res.length === 1 ? "" : "es"}${describeQuery(searchQ) ? " for " + esc(describeQuery(searchQ)) : ""}</div>` : "";
+    $("#res").innerHTML = res.length ? res.map(r => card(r.l, r.badge, true)).join("") : `<div class="empty">${L.length ? "Nothing matches — try fewer filters." : "No listings yet. Tap <b>Add</b> and record your first one."}</div>`;
+    wireCards(true);
+  };
+  wireSearch(rerun); rerun();
+}
+
+function renderPublic(app) {
+  const L = S.publicListings;
+  app.innerHTML = `<div class="hero" style="background-image:url('${esc(heroBg())}')"><div class="in"><b>${esc(S.settings.business_name || "Properties in Mangalore")}</b><span>Flats, houses, villas, plots and commercial spaces across Mangalore. Type or tap the mic — e.g. “3 BHK in Kadri under 80 lakh”.</span></div></div>
+    ${searchBar("What are you looking for?")}${chips(false)}<div id="qd"></div><div class="list" id="res"></div>`;
+  const rerun = () => {
+    const res = applySearch(L, searchQ, S.query, false);
+    $("#qd").innerHTML = S.query ? `<div class="understood">${res.length} propert${res.length === 1 ? "y" : "ies"}${describeQuery(searchQ) ? " for " + esc(describeQuery(searchQ)) : ""}</div>` : "";
+    $("#res").innerHTML = res.length ? res.map(r => card(r.l, r.badge, false)).join("") : `<div class="empty">No matching properties right now.${S.settings.whatsapp ? ` <a href="${waLink(S.settings.whatsapp, "Hi, I'm looking for: " + (S.query || "a property in Mangalore"))}">Tell us on WhatsApp</a> and we'll find one.` : ""}</div>`;
+    wireCards(false);
+  };
+  wireSearch(rerun); rerun();
+}
+
+function waLink(num, text) { const n = String(num || "").replace(/\D/g, ""); return `https://wa.me/${n.length === 10 ? "91" + n : n}?text=${encodeURIComponent(text)}`; }
+function publicUrl(id) { return location.origin + location.pathname + "#/p/" + id; }
+function shareText(l) {
+  return `${title(l)}${l.building ? " — " + l.building : ""}${l.locality ? ", " + l.locality : ""}, Mangalore\n` +
+    `${l.size_sqft ? Math.round(l.size_sqft) + " sq ft · " : ""}${money(l.asking_price, l.deal_type)}${perSqft(l) ? " (" + perSqft(l) + ")" : ""}${l.deal_type === "rent" && l.deposit ? " · deposit " + money(l.deposit) : ""}\n` +
+    `${[l.floor && "Floor " + l.floor, l.facing && l.facing + " facing", l.furnishing].filter(Boolean).join(" · ")}${amenityList(l).length ? "\n" + amenityList(l).join(", ") : ""}${approvalList(l).length ? "\nApprovals: " + approvalList(l).join(", ") : ""}\nRef #${l.ref_code}\n${publicUrl(l.id)}`;
+}
+
+function openModal(html) { $("#sheet").innerHTML = html; $("#modal").classList.add("on"); }
+function closeModal() { $("#modal").classList.remove("on"); if (location.hash.startsWith("#/p/")) history.replaceState(null, "", location.pathname); }
+$("#modal").onclick = e => { if (e.target.id === "modal") closeModal(); };
+
+function openListing(id, team) {
+  const l = (team ? S.listings : S.publicListings).find(x => x.id === id);
+  if (!l) return toast("That listing isn't available any more");
+  const photos = (l.photos || []).length ? l.photos.map(p => `<img src="${esc(photoUrl(p))}" alt="">`).join("") : `<img src="${illusFor(l)}" alt="Illustration">`;
+  const kv = [["Type", TYPES[l.property_type]], ["Size", l.size_sqft && Math.round(l.size_sqft) + " sq ft"], ["Locality", l.locality], ["Building", l.building], ["Floor", l.floor], ["Facing", l.facing], ["Furnishing", l.furnishing], ["Deposit", l.deposit && money(l.deposit)], ["Rate", perSqft(l)], ["Maintenance", l.maintenance && money(l.maintenance) + "/mo"],
+    ["Possession", l.possession === "ready" ? "Ready to move" : l.possession === "under_construction" ? "Under construction" : null], ["Age", l.age_years != null && l.age_years !== "" ? (+l.age_years === 0 ? "New" : l.age_years + " years") : null],
+    ["Approvals", approvalList(l).join(", ")], ["RERA no.", l.rera_number], ["Price", l.negotiable === false ? "Fixed" : "Negotiable"], ["Ref", "#" + l.ref_code]].filter(x => x[1]);
+  const priv = team ? `<div class="card private"><h3>Private</h3><dl class="kv">${[["Closing", money(l.closing_price, l.deal_type)], ["Location", l.maps_url && `<a href="${esc(l.maps_url)}" target="_blank" rel="noopener">Open in Google Maps</a>`], ["Owner", l.owner_name], ["Phone", l.owner_phone && `<a href="tel:${esc(l.owner_phone)}">${esc(l.owner_phone)}</a>`], ["Added", new Date(l.created_at).toLocaleDateString("en-IN")], ["Voice note", l.transcript && "“" + esc(l.transcript) + "”"]].filter(x => x[1]).map(([k, v]) => `<dt>${k}</dt><dd>${k === "Phone" || k === "Voice note" || k === "Location" ? v : esc(v)}</dd>`).join("")}</dl></div>` : "";
+  openModal(`<div class="row"><h2 class="grow" style="margin:0">${esc(title(l))}</h2><button class="btn sec sm" id="mx">Close</button></div>
+    ${photos ? `<div class="photos">${photos}</div>` : ""}
+    <div class="card"><div class="price">${money(l.asking_price, l.deal_type)}</div><div class="meta" style="margin-bottom:8px">${esc([l.building, l.locality, "Mangalore"].filter(Boolean).join(", "))}</div><span class="tag ${l.status}">${STATUSES[l.status]}</span>
+    <dl class="kv" style="margin-top:10px">${kv.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+    ${amenityList(l).length ? `<div class="amen">${amenityList(l).map(a => `<span>✓ ${esc(a)}</span>`).join("")}</div>` : ""}${l.notes && team ? `<p class="meta">${esc(l.notes)}</p>` : ""}</div>
+    ${priv}
+    ${team ? matchingLeadsHtml(l) : ""}
+    <div class="row">${team ? `
+      <select id="st" style="width:auto;flex:1">${Object.entries(STATUSES).map(([k, v]) => `<option value="${k}" ${k === l.status ? "selected" : ""}>${v}</option>`).join("")}</select>
+      <a class="btn sm" href="https://wa.me/?text=${encodeURIComponent(shareText(l))}" target="_blank">Share on WhatsApp</a>
+      <button class="btn sec sm" id="cp">Copy link</button><button class="btn sec sm" id="ed">Edit</button><button class="btn warn sm" id="dl">Delete</button>`
+      : S.settings.whatsapp ? `<a class="btn grow" style="text-align:center;text-decoration:none" href="${waLink(S.settings.whatsapp, `Hi, I'm interested in Ref #${l.ref_code}: ${title(l)}${l.locality ? " in " + l.locality : ""}`)}" target="_blank">Enquire on WhatsApp</a>` : ""}</div>
+    <div id="editf"></div>`);
+  $("#mx").onclick = closeModal;
+  if (!team) return;
+  document.querySelectorAll("[data-lead]").forEach(b => b.onclick = () => openLead(b.dataset.lead));
+  $("#st").onchange = async e => { const { error } = await sb.from("listings").update({ status: e.target.value }).eq("id", l.id); if (error) return toast(error.message); await loadListings(); toast("Status: " + STATUSES[e.target.value]); render(); };
+  $("#cp").onclick = async () => { try { await navigator.clipboard.writeText(shareText(l)); toast("Copied (client-safe — no owner details)"); } catch { toast(publicUrl(l.id)); } };
+  $("#ed").onclick = () => { renderForm($("#editf"), { ...l, photos: [...(l.photos || [])], _files: [] }, false); $("#editf").scrollIntoView({ behavior: "smooth" }); };
+  $("#dl").onclick = async () => {
+    if (!confirm("Delete this listing permanently?")) return;
+    const { error } = await sb.from("listings").delete().eq("id", l.id); if (error) return toast(error.message);
+    if (l.photos?.length) await sb.storage.from(BUCKET).remove(l.photos);
+    await loadListings(); closeModal(); render(); toast("Deleted");
+  };
+}
+
+async function renderSettings(app) {
+  const owner = S.role === "owner";
+  app.innerHTML = `<div class="card"><h3>Your account</h3><p class="meta">${esc(S.session.user.email)} · ${S.role}</p><button class="btn sec sm" id="so">Sign out</button></div>
+    <div class="card"><h3>Client page</h3><p class="meta">Share this link with clients. They see photos, prices and details — never owner contacts or closing prices.</p>
+     <div class="row"><input readonly value="${esc(location.origin + location.pathname + "#/catalogue")}" class="grow"><button class="btn sm" id="cpl">Copy</button></div>
+     <div class="row" style="margin-top:8px"><button class="btn sec sm" id="pv">Preview as client</button><button class="btn sec sm" id="csv">Export listings CSV</button><button class="btn sec sm" id="csvl">Export leads CSV</button></div></div>
+    ${owner ? `<div class="card"><h3>Business details</h3><form id="bf" class="grid">
+      <div class="full">${field("business_name", "Business name (shown at the top)", S.settings.business_name)}</div>
+      <div class="full">${field("whatsapp", "WhatsApp number for client enquiries", S.settings.whatsapp, "tel")}</div>
+      <div class="full"><label>Client page cover photo</label><div class="hero" style="min-height:120px;background-image:url('${esc(heroBg())}')"><div class="in"><span>${S.settings.hero_photo ? "Your photo" : "Default illustration"}</span></div></div>
+        <div class="row"><input type="file" id="hero" accept="image/*" class="grow">${S.settings.hero_photo ? `<button type="button" class="btn sec sm" id="herox">Remove</button>` : ""}</div></div>
+      <div class="full"><button class="btn">Save</button></div></form></div>
+     <div class="card"><h3>Team</h3><p class="meta">Invite brokers by email. They sign up with that email on this page and get full access to the inventory.</p>
+      <form id="inv" class="row"><input name="email" type="email" placeholder="colleague@email.com" class="grow" required><button class="btn sm">Invite</button></form>
+      <div id="members" style="margin-top:10px" class="meta">Loading…</div></div>` : ""}`;
+  $("#so").onclick = () => sb.auth.signOut();
+  $("#cpl").onclick = async () => { try { await navigator.clipboard.writeText(location.origin + location.pathname + "#/catalogue"); toast("Client link copied"); } catch { } };
+  $("#pv").onclick = () => { S.publicMode = true; loadPublic().then(render); };
+  $("#csv").onclick = exportCsv;
+  $("#csvl").onclick = () => {
+    const cols = ["created_at", "name", "phone", "deal_type", "property_types", "bhk_min", "bhk_max", "localities", "budget_min", "budget_max", "size_min", "size_max", "furnishing", "status", "notes", "transcript"];
+    const csv = [cols.join(","), ...S.leads.map(l => cols.map(c => `"${String(Array.isArray(l[c]) ? l[c].join("; ") : l[c] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "leads.csv"; a.click();
+  };
+  if (!owner) return;
+  $("#bf").onsubmit = async e => {
+    e.preventDefault(); const f = e.target;
+    const { error } = await sb.from("app_settings").update({ business_name: f.business_name.value.trim() || null, whatsapp: f.whatsapp.value.trim() || null }).eq("id", 1);
+    if (error) return toast(error.message); await loadSettings(); render(); toast("Saved");
+  };
+  $("#hero").onchange = async e => {
+    const file = e.target.files[0]; if (!file) return; toast("Uploading cover photo…");
+    try { const path = await uploadPhoto("branding", file); const { error } = await sb.from("app_settings").update({ hero_photo: path }).eq("id", 1); if (error) throw error; await loadSettings(); render(); toast("Cover photo updated"); }
+    catch (err) { toast("Upload failed: " + (err.message || err)); }
+  };
+  if ($("#herox")) $("#herox").onclick = async () => { await sb.from("app_settings").update({ hero_photo: null }).eq("id", 1); await loadSettings(); render(); };
+  $("#inv").onsubmit = async e => {
+    e.preventDefault(); const email = e.target.email.value.trim().toLowerCase();
+    const { error } = await sb.from("team_invites").insert({ email }); if (error) return toast(error.code === "23505" ? "Already invited" : error.message);
+    e.target.reset(); toast("Invited " + email); drawMembers();
+  };
+  drawMembers();
+  async function drawMembers() {
+    const [{ data: m }, { data: inv }] = await Promise.all([sb.from("team_members").select("*").order("created_at"), sb.from("team_invites").select("*").order("created_at")]);
+    $("#members").innerHTML = (m || []).map(x => `<div class="row" style="padding:4px 0"><span class="grow">${esc(x.email)} <span class="tag">${x.role}</span></span>${x.user_id !== S.session.user.id ? `<button class="btn warn sm" data-rmm="${x.user_id}">Remove</button>` : ""}</div>`).join("") +
+      (inv || []).map(x => `<div class="row" style="padding:4px 0"><span class="grow">${esc(x.email)} <span class="tag">invited</span></span><button class="btn sec sm" data-rmi="${esc(x.email)}">Cancel</button></div>`).join("");
+    document.querySelectorAll("[data-rmm]").forEach(b => b.onclick = async () => { if (confirm("Remove this person from the team?")) { await sb.from("team_members").delete().eq("user_id", b.dataset.rmm); drawMembers(); } });
+    document.querySelectorAll("[data-rmi]").forEach(b => b.onclick = async () => { await sb.from("team_invites").delete().eq("email", b.dataset.rmi); drawMembers(); });
+  }
+}
+function exportCsv() {
+  const cols = ["ref_code", "created_at", "deal_type", "property_type", "bhk", "locality", "building", "size_sqft", "asking_price", "closing_price", "deposit", "floor", "facing", "furnishing", "status", "owner_name", "owner_phone", "notes", "transcript"];
+  const csv = [cols.join(","), ...S.listings.map(l => cols.map(c => `"${String(l[c] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "inventory.csv"; a.click();
+}
+
+
+// ---------- Leads ----------
+const OPEN_LEAD = ["new", "contacted", "site_visit", "negotiating"];
+function leadMatches(lead) {
+  return S.listings.map(l => ({ l, m: matchLead(lead, l) })).filter(x => x.m && x.m.score >= 50).sort((a, b) => b.m.score - a.m.score);
+}
+function leadsFor(listing) {
+  return S.leads.filter(ld => OPEN_LEAD.includes(ld.status)).map(ld => ({ ld, m: matchLead(ld, listing) })).filter(x => x.m && x.m.score >= 50).sort((a, b) => b.m.score - a.m.score);
+}
+function scoreTag(n) { return `<span class="score ${n < 70 ? "mid" : ""}">${n}%</span>`; }
+function describeLead(ld) {
+  const p = [];
+  if (ld.bhk_min || ld.bhk_max) p.push(ld.bhk_min && ld.bhk_max && ld.bhk_min !== ld.bhk_max ? `${ld.bhk_min}–${ld.bhk_max} BHK` : `${ld.bhk_min || ld.bhk_max} BHK`);
+  if (ld.property_types?.length && ld.property_types.length < 4) p.push(ld.property_types.map(t => TYPES[t]).join("/"));
+  p.push(ld.deal_type === "rent" ? "to rent" : "to buy");
+  if (ld.localities?.length) p.push("in " + ld.localities.join(", "));
+  if (ld.budget_min && ld.budget_max) p.push(`${money(ld.budget_min, ld.deal_type)}–${money(ld.budget_max, ld.deal_type)}`);
+  else if (ld.budget_max) p.push("up to " + money(ld.budget_max, ld.deal_type));
+  if (ld.size_min) p.push(ld.size_min + "+ sq ft");
+  if (ld.furnishing) p.push(ld.furnishing);
+  return p.join(" · ");
+}
+function telLink(n) { const d = String(n || "").replace(/\D/g, ""); return d ? "tel:" + (d.length === 10 ? "+91" + d : "+" + d) : null; }
+function matchingLeadsHtml(l) {
+  const ms = leadsFor(l);
+  return `<div class="card"><h3>Matching leads (${ms.length})</h3>${ms.length ? ms.slice(0, 10).map(({ ld, m }) => `
+    <div class="mrow">${scoreTag(m.score)}<div class="grow"><b>${esc(ld.name || "Unnamed lead")}</b><div class="meta">${esc(describeLead(ld))}</div></div>
+    ${ld.phone ? `<a class="btn sm" href="${waLink(ld.phone, "Hi " + (ld.name || "") + ", this one fits what you're looking for:\n\n" + shareText(l))}" target="_blank">Send</a>` : ""}
+    <button class="btn sec sm" data-lead="${ld.id}">Open</button></div>`).join("") : `<div class="meta">No open leads want this yet.</div>`}</div>`;
+}
+
+function renderLeads(app) {
+  const d = S.leadDraft;
+  const open = S.leads.filter(x => OPEN_LEAD.includes(x.status)).length;
+  app.innerHTML = `<div class="card"><div class="mic"><button class="micbtn" id="lmic" aria-label="Record lead">${MIC}</button>
+    <div class="hint">Record a new enquiry:<br>“Suresh Rao, 98860 11223, wants a 2 or 3 BHK flat in Kadri or Bejai, budget 60 to 75 lakh”</div></div>
+    <textarea id="lnote" placeholder="…or type the customer's requirement">${esc(d?.transcript || "")}</textarea>
+    <div class="row" style="margin-top:10px"><button class="btn grow" id="lparse">Fill the lead form</button></div></div>
+    <div id="lform"></div>
+    <div class="row" style="margin:6px 0 2px"><h2 class="grow" style="margin:0">Leads <span class="meta" style="font-weight:400">${open} open</span></h2></div>
+    <div class="chips">${[["open", "Open"], ["new", "New"], ["contacted", "Contacted"], ["site_visit", "Site visit"], ["negotiating", "Negotiating"], ["closed", "Closed"], ["lost", "Lost"], ["all", "All"]].map(([v, t]) => `<button class="chip ${S.leadFilter === v ? "on" : ""}" data-lf="${v}">${t}</button>`).join("")}</div>
+    <div id="llist"></div>`;
+  const note = $("#lnote");
+  $("#lmic").onclick = e => listen(e.currentTarget, (txt, done) => { note.value = txt; if (done && txt) doParse(); });
+  $("#lparse").onclick = doParse;
+  async function doParse() {
+    const text = note.value.trim(); if (!text) return toast("Say or type the customer's requirement first");
+    $("#lparse").disabled = true; $("#lparse").textContent = "Reading…";
+    const p = await smartParse(text, "lead");
+    S.leadDraft = { ...p, transcript: text };
+    $("#lparse").disabled = false; $("#lparse").textContent = "Fill the lead form";
+    renderLeadForm($("#lform"), S.leadDraft, true);
+  }
+  if (d) renderLeadForm($("#lform"), d, true);
+  document.querySelectorAll("[data-lf]").forEach(b => b.onclick = () => { S.leadFilter = b.dataset.lf; render(); });
+  const rows = S.leads.filter(x => S.leadFilter === "all" ? true : S.leadFilter === "open" ? OPEN_LEAD.includes(x.status) : x.status === S.leadFilter);
+  $("#llist").innerHTML = rows.length ? rows.map(ld => {
+    const ms = leadMatches(ld);
+    return `<div class="card lead" data-id="${ld.id}"><div class="row"><b class="grow">${esc(ld.name || "Unnamed lead")}</b><span class="tag">${LEAD_STATUSES[ld.status]}</span></div>
+      <div class="meta">${esc(describeLead(ld))}</div>
+      <div style="margin-top:6px">${ms.length ? `<span class="tag match">${ms.length} matching propert${ms.length > 1 ? "ies" : "y"}</span>${ms[0] ? `<span class="meta">best: ${esc(title(ms[0].l))}${ms[0].l.locality ? ", " + esc(ms[0].l.locality) : ""} (${ms[0].m.score}%)</span>` : ""}` : `<span class="meta">No matches in inventory yet</span>`}</div></div>`;
+  }).join("") : `<div class="empty">${S.leads.length ? "No leads in this view." : "No leads yet. Record your first enquiry above."}</div>`;
+  document.querySelectorAll(".lead").forEach(c => c.onclick = () => openLead(c.dataset.id));
+}
+
+function budgetField(k, lab, v, deal) {
+  const rent = deal === "rent";
+  return `<div><label>${lab} (${rent ? "₹ / month" : "₹ lakh · 1 Cr = 100"})</label><input name="${k}" type="text" inputmode="decimal" data-unit="${rent ? "rupee" : "lakh"}" value="${esc(rent ? (v ?? "") : lakhs(v))}"></div>`;
+}
+function renderLeadForm(el, d, isNew) {
+  const deal = d.deal_type || "sale";
+  const types = d.property_types || [];
+  el.innerHTML = `<div class="card"><h3>${isNew ? "Check & save lead" : "Edit lead"}</h3>
+   ${isNew ? `<div class="understood">Understood: ${esc(d.name || "New lead")} — ${esc(describeLead(d))}</div>` : ""}
+   <form id="ldf" class="grid">
+    ${field("name", "Customer name", d.name)}
+    ${field("phone", "Phone", d.phone, "tel")}
+    ${field("deal_type", "Wants to", deal, null, [["sale", "Buy"], ["rent", "Rent"]])}
+    ${field("status", "Status", d.status || "new", null, Object.entries(LEAD_STATUSES))}
+    <div class="full"><label>Property types (leave all unticked for any)</label><div class="typechips">${Object.entries(TYPES).map(([k, t]) => `<label><input type="checkbox" name="pt" value="${k}" ${types.includes(k) ? "checked" : ""}>${t}</label>`).join("")}</div></div>
+    ${field("bhk_min", "BHK from", d.bhk_min, "number")}
+    ${field("bhk_max", "BHK to", d.bhk_max, "number")}
+    <div class="full"><label>Preferred areas (comma separated)</label><input name="localities" list="locs2" value="${esc((d.localities || []).join(", "))}"><datalist id="locs2">${knownLocalities().sort().map(x => `<option value="${esc(x)}">`).join("")}</datalist></div>
+    ${budgetField("budget_min", "Budget from", d.budget_min, deal)}
+    ${budgetField("budget_max", "Budget up to", d.budget_max, deal)}
+    ${field("size_min", "Min size (sq ft)", d.size_min, "number")}
+    ${field("size_max", "Max size (sq ft)", d.size_max, "number")}
+    ${field("furnishing", "Furnishing", d.furnishing || "", null, [["", "Any"], ["unfurnished", "Unfurnished"], ["semi-furnished", "Semi-furnished"], ["furnished", "Furnished"]])}
+    <div class="full"><label>Notes</label><textarea name="notes" style="min-height:60px">${esc(d.notes || "")}</textarea></div>
+    <div class="full row"><button class="btn grow" type="submit" id="lsv">${isNew ? "Save lead & find matches" : "Save changes"}</button>${isNew ? `<button class="btn sec" type="button" id="lcl">Clear</button>` : ""}</div>
+   </form></div>`;
+  const f = $("#ldf", el);
+  f.querySelectorAll("[data-unit]").forEach(inp => { const hint = document.createElement("div"); hint.className = "pricehint"; inp.after(hint); const upd = () => { const v = priceValue(inp); hint.textContent = v ? "= " + money(v, inp.dataset.unit === "rupee" ? "rent" : null) : ""; }; inp.addEventListener("input", upd); upd(); });
+  f.deal_type.onchange = () => { Object.assign(d, readLeadForm(f)); d.deal_type = f.deal_type.value; renderLeadForm(el, d, isNew); };
+  if ($("#lcl", el)) $("#lcl", el).onclick = () => { S.leadDraft = null; render(); };
+  f.onsubmit = async e => {
+    e.preventDefault(); const btn = $("#lsv", el); btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      const row = readLeadForm(f);
+      let id = d.id;
+      if (isNew) { row.transcript = d.transcript; const { data, error } = await sb.from("leads").insert(row).select().single(); if (error) throw error; id = data.id; }
+      else { const { error } = await sb.from("leads").update(row).eq("id", id); if (error) throw error; }
+      await loadLeads();
+      if (isNew) { S.leadDraft = null; render(); }
+      toast(isNew ? "Lead saved ✓" : "Updated ✓");
+      openLead(id);
+    } catch (err) { toast("Couldn't save: " + (err.message || err)); btn.disabled = false; btn.textContent = "Try again"; }
+  };
+}
+function readLeadForm(f) {
+  const g = n => f[n] ? f[n].value.trim() : "";
+  const num = n => f[n].dataset.unit ? priceValue(f[n]) : (g(n) === "" || isNaN(parseFloat(g(n))) ? null : parseFloat(g(n)));
+  const known = knownLocalities();
+  const locs = g("localities").split(/[,\/]| or | and /i).map(x => x.trim()).filter(Boolean).map(x => snapLocality(x, known) || titleCase(x.toLowerCase()));
+  return { name: g("name") || null, phone: g("phone") || null, deal_type: g("deal_type"), status: g("status"),
+    property_types: [...f.querySelectorAll("[name=pt]:checked")].map(x => x.value), bhk_min: num("bhk_min"), bhk_max: num("bhk_max"),
+    localities: [...new Set(locs)], budget_min: num("budget_min"), budget_max: num("budget_max"), size_min: num("size_min"), size_max: num("size_max"),
+    furnishing: g("furnishing") || null, notes: g("notes") || null };
+}
+
+function openLead(id) {
+  const ld = S.leads.find(x => x.id === id); if (!ld) return toast("Lead not found");
+  const ms = leadMatches(ld);
+  const tel = telLink(ld.phone);
+  openModal(`<div class="row"><h2 class="grow" style="margin:0">${esc(ld.name || "Unnamed lead")}</h2><button class="btn sec sm" id="mx">Close</button></div>
+    <div class="card" style="margin-top:12px"><div class="meta">${esc(describeLead(ld))}</div>
+     ${ld.notes ? `<p style="margin:8px 0 0">${esc(ld.notes)}</p>` : ""}
+     ${ld.transcript ? `<p class="meta" style="margin:8px 0 0">“${esc(ld.transcript)}”</p>` : ""}
+     <div class="row" style="margin-top:10px">${tel ? `<a class="btn sm" href="${tel}">Call</a><a class="btn sm" href="${waLink(ld.phone, "Hi " + (ld.name || ""))}" target="_blank">WhatsApp</a>` : ""}
+      <select id="lst" style="width:auto;flex:1">${Object.entries(LEAD_STATUSES).map(([k, v]) => `<option value="${k}" ${k === ld.status ? "selected" : ""}>${v}</option>`).join("")}</select></div></div>
+    <div class="card"><h3>Matching properties (${ms.length})</h3>
+     ${ms.length ? ms.slice(0, 20).map(({ l, m }) => `<div class="mrow">${scoreTag(m.score)}<div class="grow" data-open="${l.id}" style="cursor:pointer">
+        <b>${esc(title(l))}</b> · ${money(l.asking_price, l.deal_type)}${l.closing_price && l.closing_price !== l.asking_price ? ` <span class="meta">(closes ${money(l.closing_price, l.deal_type)})</span>` : ""}
+        <div class="meta">${esc([l.building, l.locality].filter(Boolean).join(", "))}${l.size_sqft ? " · " + Math.round(l.size_sqft) + " sq ft" : ""}</div>
+        <div>${m.why.map(w => `<span class="tag ${w === "Other area" || w.includes("above") || w.includes("close)") ? "" : "match"}">${esc(w)}</span>`).join("")}</div></div>
+        ${ld.phone ? `<a class="btn sm" href="${waLink(ld.phone, "Hi " + (ld.name || "") + ", this one fits what you're looking for:\n\n" + shareText(l))}" target="_blank">Send</a>` : ""}</div>`).join("")
+      : `<div class="meta">Nothing in inventory fits yet. When you add a property that does, it will show up here and on that property.</div>`}
+     ${ld.phone && ms.length > 1 ? `<a class="btn" style="display:block;text-align:center;text-decoration:none;margin-top:10px" target="_blank" href="${waLink(ld.phone, "Hi " + (ld.name || "") + ", here are some properties that match your requirement:\n\n" + ms.slice(0, 5).map(({ l }) => shareText(l)).join("\n\n"))}">Send top ${Math.min(5, ms.length)} on WhatsApp</a>` : ""}
+    </div>
+    <div class="row"><button class="btn sec sm" id="led">Edit lead</button><button class="btn warn sm" id="ldl">Delete</button></div><div id="leditf"></div>`);
+  $("#mx").onclick = closeModal;
+  document.querySelectorAll("[data-open]").forEach(x => x.onclick = () => openListing(x.dataset.open, true));
+  $("#lst").onchange = async e => { const { error } = await sb.from("leads").update({ status: e.target.value }).eq("id", ld.id); if (error) return toast(error.message); await loadLeads(); toast("Status: " + LEAD_STATUSES[e.target.value]); if (S.tab === "leads") render(); };
+  $("#led").onclick = () => { renderLeadForm($("#leditf"), { ...ld }, false); $("#leditf").scrollIntoView({ behavior: "smooth" }); };
+  $("#ldl").onclick = async () => { if (!confirm("Delete this lead?")) return; const { error } = await sb.from("leads").delete().eq("id", ld.id); if (error) return toast(error.message); await loadLeads(); closeModal(); render(); toast("Lead deleted"); };
+}
+
+// ---------- Auth ----------
+function openLogin() {
+  openModal(`<div class="row"><h2 class="grow" style="margin:0">Team login</h2><button class="btn sec sm" id="mx">Close</button></div>
+   <form id="af" class="card" style="margin-top:12px"><div style="margin-bottom:10px"><label>Email</label><input name="email" type="email" autocomplete="email" required></div>
+   <div style="margin-bottom:12px"><label>Password</label><input name="password" type="password" autocomplete="current-password" minlength="6" required></div>
+   <div class="row"><button class="btn grow" name="in">Sign in</button><button class="btn sec grow" type="button" id="up">Create account</button></div>
+   <p class="meta" id="am" style="margin-bottom:0">New teammate? Ask the owner to invite your email, then tap “Create account”.</p></form>`);
+  $("#mx").onclick = closeModal;
+  const f = $("#af");
+  f.onsubmit = async e => { e.preventDefault(); const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value }); if (error) $("#am").textContent = error.message === "Email not confirmed" ? "Check your inbox for the confirmation email first." : error.message; else closeModal(); };
+  $("#up").onclick = async () => {
+    if (!f.reportValidity()) return;
+    const { data, error } = await sb.auth.signUp({ email: f.email.value.trim(), password: f.password.value, options: { emailRedirectTo: location.origin + location.pathname } });
+    if (error) { $("#am").textContent = error.message; return; }
+    if (!data.session) $("#am").textContent = "Account created — confirm it from the email we just sent, then sign in."; else closeModal();
+  };
+}
+$("#authBtn").onclick = () => { if (!S.session) return openLogin(); S.publicMode = !S.publicMode; (S.publicMode ? loadPublic() : loadListings()).then(render); };
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => { S.tab = b.dataset.tab; S.query = ""; searchQ = null; render(); window.scrollTo(0, 0); });
+
+// ---------- Data ----------
+async function loadSettings() { const { data } = await sb.from("app_settings").select("*").eq("id", 1).maybeSingle(); S.settings = data || {}; }
+async function loadPublic() { const { data } = await sb.rpc("public_listings"); S.publicListings = data || []; }
+async function loadListings() { if (!S.role) return; const { data, error } = await sb.from("listings").select("*").order("created_at", { ascending: false }); if (!error) S.listings = data || []; }
+async function loadLeads() { if (!S.role) return; const { data, error } = await sb.from("leads").select("*").order("created_at", { ascending: false }); if (!error) S.leads = data || []; }
+async function loadRole() { if (!S.session) { S.role = null; return; } const { data } = await sb.rpc("join_team"); S.role = data || null; }
+
+async function boot() {
+  const hash = location.hash;
+  S.publicMode = hash.startsWith("#/catalogue") || hash.startsWith("#/p/");
+  const { data: { session } } = await sb.auth.getSession(); S.session = session;
+  await Promise.all([loadSettings(), loadRole()]);
+  if (S.role) { await Promise.all([loadListings(), loadLeads()]); if (S.listings.length && !S.publicMode) S.tab = "add"; }
+  if (!S.role || S.publicMode) await loadPublic();
+  render();
+  const m = hash.match(/^#\/p\/([0-9a-f-]{36})/); if (m) { if (!S.publicListings.length) await loadPublic(); openListing(m[1], false); }
+}
+sb.auth.onAuthStateChange(async (ev, session) => {
+  if (ev === "INITIAL_SESSION") return;
+  S.session = session; await loadRole();
+  if (S.role) { S.publicMode = false; await Promise.all([loadListings(), loadLeads()]); } else { await loadPublic(); }
+  render();
+});
+boot();
+</script>
+</body>
+</html>
